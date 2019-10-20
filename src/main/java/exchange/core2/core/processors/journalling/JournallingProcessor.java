@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter;
  * Journal writer
  * <p>
  * - stateful handler
- * - not thread safe!
+ * - not thread safe! 不是线程安全的
  */
 @Slf4j
 public class JournallingProcessor {
@@ -50,6 +50,7 @@ public class JournallingProcessor {
 
     private final String today = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_FORMAT));
 
+    // TODO 异步创建新文件，然后切换引用
     // TODO asynchronously create new file and then switch reference
 
     public void onEvent(OrderCommand cmd, long seq, boolean eob) throws IOException {
@@ -84,12 +85,17 @@ public class JournallingProcessor {
         }
     }
 
+    /**
+     * 同步刷新缓冲区
+     * @throws IOException
+     */
     private void flushBufferSync() throws IOException {
         raf.write(buffer.array(), 0, buffer.position());
         writtenBytes += buffer.position();
         buffer.clear();
 
         if (writtenBytes >= FILE_SIZE_TRIGGER) {
+            // todo 开始异步准备新文件，但仅一次
             // todo start preparing new file asynchronously, but ONLY ONCE
             startNewFile();
             writtenBytes = 0;

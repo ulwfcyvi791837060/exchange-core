@@ -67,6 +67,7 @@ public final class GroupingProcessor implements EventProcessor {
 
 
     /**
+     * 可以在halt（）之后让另一个线程重新运行此方法。
      * It is ok to have another thread rerun this method after a halt().
      *
      * @throws IllegalStateException if this object instance is already running in a thread
@@ -106,6 +107,7 @@ public final class GroupingProcessor implements EventProcessor {
         while (true) {
             try {
 
+                // 应该旋转并检查另一个障碍
                 // should spin and also check another barrier
                 long availableSequence = waitSpinningHelper.tryWaitFor(nextSequence);
 
@@ -115,6 +117,7 @@ public final class GroupingProcessor implements EventProcessor {
                         OrderCommand cmd = ringBuffer.get(nextSequence);
                         nextSequence++;
 
+                        // 一些命令应触发R2阶段以避免事件中未处理的状态
                         // some commands should trigger R2 stage to avoid unprocessed state in events
                         if (cmd.command == OrderCommandType.RESET
                                 || cmd.command == OrderCommandType.PERSIST_STATE_MATCHING
@@ -131,19 +134,22 @@ public final class GroupingProcessor implements EventProcessor {
                             cmd.serviceFlags = 1;
                         }
 
+                        // 清洁附着的物体
                         // cleaning attached objects
                         cmd.marketData = null;
                         cmd.matcherEvent = null;
 
                         if (cmd.command == OrderCommandType.NOP) {
+                            // 只需设置下一组并通过
                             // just set next group and pass
                             continue;
                         }
 
                         msgsInGroup++;
 
-                        // switch group after each N messages
+                        // switch group after each N messages 每N条消息后切换组
                         // avoid changing groups when PERSIST_STATE_MATCHING is already executing
+                        // 当已经执行PERSIST_STATE_MATCHING时避免更改组
                         if (msgsInGroup >= msgsInGroupLimit && cmd.command != OrderCommandType.PERSIST_STATE_RISK) {
                             groupCounter++;
                             msgsInGroup = 0;
