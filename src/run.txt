@@ -1,0 +1,4 @@
+How to run tests
+Latency test: mvn -Dtest=PerfLatency#latencyTest test
+Throughput test: mvn -Dtest=PerfThroughput#throughputTest test
+Hiccups test: mvn -Dtest=PerfHiccups#hiccupsTest test
