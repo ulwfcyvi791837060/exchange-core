@@ -152,7 +152,7 @@ public final class ExchangeCore {
                 }));
 
         /**
-         *          //1,2,last顺序执行
+         *         //1,2,last顺序执行
          *         //disruptor.handleEventsWith(new LongEventHandler()).handleEventsWith(new SecondEventHandler())
          *         //        .handleEventsWith(new LastEventHandler());
          *
@@ -164,7 +164,7 @@ public final class ExchangeCore {
          *         //disruptor.handleEventsWith(firstEventHandler, secondHandler);
          *         //disruptor.after(firstEventHandler, secondHandler).handleEventsWith(lastEventHandler);
          *
-         *  //1后2，3后4，1和3并发，2和4都结束后last
+         *         //1后2，3后4，1和3并发，2和4都结束后last
          *         disruptor.handleEventsWith(firstEventHandler, thirdEventHandler);
          *         disruptor.after(firstEventHandler).handleEventsWith(secondHandler);
          *         disruptor.after(thirdEventHandler).handleEventsWith(fourthEventHandler);
