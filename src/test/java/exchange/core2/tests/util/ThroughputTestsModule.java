@@ -95,6 +95,9 @@ public class ThroughputTestsModule {
             }
 
             float avg = (float) perfResults.stream().mapToDouble(x -> x).average().orElse(0);
+            // 20191020 在笔记本测试是 67647 次
+            log.info("平均每秒多少次 M 是6个0 : {} MT/s", avg);
+            log.info("平均每秒多少次 M 是6个0 : {} MT/s", avg);
             log.info("Average: {} MT/s", avg);
         }
     }

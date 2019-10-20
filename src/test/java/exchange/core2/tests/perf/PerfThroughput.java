@@ -27,6 +27,22 @@ public final class PerfThroughput {
     // TODO shutdown disruptor if test fails
 
     /**
+     * 延迟测试：mvn -Dtest = PerfLatency＃latencyTest测试
+     * 吞吐量测试：mvn -Dtest = PerfThroughput＃throughputTest测试
+     * 打ic测试：mvn -Dtest = PerfHiccups＃hiccupsTest测试
+     */
+
+    /**
+     * 这是针对简化条件的吞吐量测试
+     *       *-一个符号
+     *       *-约1K活跃用户（2K货币帐户）
+     *       *-1K待定限价单（在一本订单簿中）
+     *       * 6线程CPU可以运行此测试
+     *
+     小数点后移 6
+     5.000000
+     0.06764774 MT/s = 67647.74 MT/s
+     *
      * This is throughput test for simplified conditions
      * - one symbol
      * - ~1K active users (2K currency accounts)
