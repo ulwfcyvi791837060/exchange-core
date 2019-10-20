@@ -75,11 +75,13 @@ public final class ExchangeCore {
                 OrderCommand::new,
                 ringBufferSize,
                 UnsafeUtils.affinedThreadFactory(threadAffinityMode),
+                //多个网关线程正在写入
                 ProducerType.MULTI, // multiple gateway threads are writing
                 waitStrategy.create());
 
         this.api = new ExchangeApi(disruptor.getRingBuffer());
 
+        // 创建和附加异常处理程序
         // creating and attaching exceptions handler
         final DisruptorExceptionHandler<OrderCommand> exceptionHandler = new DisruptorExceptionHandler<>("main", (ex, seq) -> {
             log.error("Exception thrown on sequence={}", seq, ex);
@@ -90,10 +92,12 @@ public final class ExchangeCore {
 
         disruptor.setDefaultExceptionHandler(exceptionHandler);
 
+        // 定义撮合引擎
         // creating matching engine event handlers array // TODO parallel deserialization
         final EventHandler<OrderCommand>[] matchingEngineHandlers = IntStream.range(0, matchingEnginesNum)
                 .mapToObj(shardId -> {
                     final MatchingEngineRouter router = new MatchingEngineRouter(shardId, matchingEnginesNum, serializationProcessor, orderBookFactory, loadStateId);
+                    // 应该只是定义,在需要的时候才会运行
                     return (EventHandler<OrderCommand>) (cmd, seq, eob) -> router.processOrder(cmd);
                 })
                 .toArray(ExchangeCore::newEventHandlersArray);
@@ -106,10 +110,13 @@ public final class ExchangeCore {
         final List<TwoStepMasterProcessor> procR1 = new ArrayList<>(riskEnginesNum);
         final List<TwoStepSlaveProcessor> procR2 = new ArrayList<>(riskEnginesNum);
 
+        // 第一执行分组处理器
         // 1. grouping processor (G)
         final EventHandlerGroup<OrderCommand> afterGrouping =
                 disruptor.handleEventsWith((rb, bs) -> new GroupingProcessor(rb, rb.newBarrier(bs), msgsInGroupLimit, waitStrategy));
 
+
+        // [新闻（J）]与风险保留（R1）+匹配引擎（ME）并行
         // 2. [journalling (J)] in parallel with risk hold (R1) + matching engine (ME)
         if (journallingHandler != null) {
             afterGrouping.handleEventsWith(journallingHandler::onEvent);
@@ -122,8 +129,11 @@ public final class ExchangeCore {
                     return r1;
                 }));
 
+        // 两步主处理器在撮合后面
         disruptor.after(procR1.toArray(new TwoStepMasterProcessor[0])).handleEventsWith(matchingEngineHandlers);
 
+        // 风险释放 在撮合后面
+        // 匹配引擎（ME）后的风险释放（R2）
         // 3. risk release (R2) after matching engine (ME)
         final EventHandlerGroup<OrderCommand> afterMatchingEngine = disruptor.after(matchingEngineHandlers);
 
@@ -134,6 +144,20 @@ public final class ExchangeCore {
                     return r2;
                 }));
 
+        /**
+         *  //1后2，3后4，1和3并发，2和4都结束后last
+         *         disruptor.handleEventsWith(firstEventHandler, thirdEventHandler);
+         *         disruptor.after(firstEventHandler).handleEventsWith(secondHandler);
+         *         disruptor.after(thirdEventHandler).handleEventsWith(fourthEventHandler);
+         *         disruptor.after(secondHandler, fourthEventHandler).handleEventsWith(lastEventHandler);
+         * ————————————————
+         * 版权声明：本文为CSDN博主「天涯泪小武」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+         * 原文链接：https://blog.csdn.net/tianyaleixiaowu/article/details/79787377
+         */
+
+        // journallingHandler::onEvent 访问 onEvent 方法
+        // 结果处理程序在撮合和日志(可选)后面 撮合和日志并行
+        // 匹配引擎（ME）+ [新闻（J）]之后的结果处理程序（E）
         // 4. results handler (E) after matching engine (ME) + [journalling (J)]
         (journallingHandler != null ? disruptor.after(ArrayUtils.add(matchingEngineHandlers, journallingHandler::onEvent)) : afterMatchingEngine)
                 .handleEventsWith((cmd, seq, eob) -> {
@@ -141,6 +165,7 @@ public final class ExchangeCore {
                     api.processResult(seq, cmd); // TODO SLOW ?(volatile operations)
                 });
 
+        // 将从处理器连接到主处理器
         // attach slave processors to master processor
         Streams.forEachPair(procR1.stream(), procR2.stream(), TwoStepMasterProcessor::setSlaveProcessor);
 
