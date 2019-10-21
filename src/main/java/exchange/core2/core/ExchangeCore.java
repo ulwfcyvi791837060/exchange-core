@@ -75,8 +75,9 @@ public final class ExchangeCore {
                 OrderCommand::new,
                 ringBufferSize,
                 UnsafeUtils.affinedThreadFactory(threadAffinityMode),
-                //多个网关线程正在写入
-                ProducerType.MULTI, // multiple gateway threads are writing
+                // 多个网关线程正在写入
+                // multiple gateway threads are writing
+                ProducerType.MULTI,
                 waitStrategy.create());
 
         this.api = new ExchangeApi(disruptor.getRingBuffer());
@@ -85,6 +86,7 @@ public final class ExchangeCore {
         // creating and attaching exceptions handler
         final DisruptorExceptionHandler<OrderCommand> exceptionHandler = new DisruptorExceptionHandler<>("main", (ex, seq) -> {
             log.error("Exception thrown on sequence={}", seq, ex);
+            // TODO 重新发布时抛出异常
             // TODO re-throw exception on publishing
             disruptor.getRingBuffer().publishEvent(SHUTDOWN_SIGNAL_TRANSLATOR);
             disruptor.shutdown();
@@ -212,6 +214,7 @@ public final class ExchangeCore {
     public synchronized void shutdown() {
         if (!stopped) {
             stopped = true;
+            // TODO 首先停止接受新事件
             // TODO stop accepting new events first
             log.info("Shutdown disruptor...");
             disruptor.getRingBuffer().publishEvent(SHUTDOWN_SIGNAL_TRANSLATOR);

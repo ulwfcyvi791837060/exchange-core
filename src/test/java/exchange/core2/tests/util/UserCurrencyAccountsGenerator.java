@@ -29,6 +29,7 @@ import java.util.*;
 public final class UserCurrencyAccountsGenerator {
 
     /**
+     * 生成随机用户和他们应具有的不同货币，因此总帐户在accountsToCreate和accountToCreate + currencies.size（）之间
      * Generates random users and different currencies they should have, so the total account is between
      * accountsToCreate and accountsToCreate+currencies.size()
      * <p>
@@ -50,6 +51,7 @@ public final class UserCurrencyAccountsGenerator {
         int totalAccountsQuota = accountsToCreate;
         do {
             final List<Integer> curList = new ArrayList<>(currencies);
+            // TODO 更喜欢一些货币
             // TODO prefer some currencies more
             Collections.shuffle(curList, rand);
             final int numberOfCurrencies = Math.min(Math.min(1 + (int) paretoDistribution.sample(), curList.size()), totalAccountsQuota);

@@ -99,11 +99,21 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
         }
     }
 
+    /**
+     * 流程订单
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 15:20
+      * @param cmd
+     * @return void
+     * @throws
+     **/
     public void processOrder(OrderCommand cmd) {
 
         final OrderCommandType command = cmd.command;
 
         if (command == OrderCommandType.MOVE_ORDER || command == OrderCommandType.CANCEL_ORDER || command == OrderCommandType.ORDER_BOOK_REQUEST || command == OrderCommandType.PLACE_ORDER) {
+            // 仅处理特定的符号组
             // process specific symbol group only
             if (symbolForThisHandler(cmd.symbol)) {
                 processMatchingCommand(cmd);
@@ -116,6 +126,7 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
             }
 
         } else if (command == OrderCommandType.RESET) {
+            // 处理所有符号组，只有处理器0写入结果
             // process all symbols groups, only processor 0 writes result
             orderBooks.clear();
             binaryCommandsProcessor.reset();
@@ -124,7 +135,9 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
             }
 
         } else if (command == OrderCommandType.PERSIST_STATE_MATCHING) {
+            //持久匹配状态
             final boolean isSuccess = serializationProcessor.storeData(cmd.orderId, ISerializationProcessor.SerializedModuleType.MATCHING_ENGINE_ROUTER, shardId, this);
+            // 发送ACCEPTED，因为这是系列中的第一个命令。风险引擎位居第二-因此它将返回SUCCESS
             // Send ACCEPTED because this is a first command in series. Risk engine is second - so it will return SUCCESS
             UnsafeUtils.setResultVolatile(cmd, isSuccess, CommandResultCode.ACCEPTED, CommandResultCode.STATE_PERSIST_MATCHING_ENGINE_FAILED);
         }

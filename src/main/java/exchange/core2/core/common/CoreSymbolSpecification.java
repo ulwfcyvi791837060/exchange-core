@@ -36,6 +36,7 @@ public final class CoreSymbolSpecification implements WriteBytesMarshallable, St
 
     // currency pair specification
     public final int baseCurrency;  // base currency
+    // 报价/柜台货币（或期货合约货币）
     public final int quoteCurrency; // quote/counter currency (OR futures contract currency)
     public final long baseScaleK;   // base currency amount multiplier (lot size in base currency units)
     public final long quoteScaleK;  // quote currency amount multiplier (step size in quote currency units)

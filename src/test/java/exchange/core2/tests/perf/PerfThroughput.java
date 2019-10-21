@@ -24,6 +24,7 @@ import org.junit.Test;
 @Slf4j
 public final class PerfThroughput {
 
+    // TODO 如果测试失败，则关闭中断器
     // TODO shutdown disruptor if test fails
 
     /**
@@ -49,17 +50,33 @@ public final class PerfThroughput {
      * - 1K pending limit-orders (in one order book)
      * 6-threads CPU can run this test
      */
+
+    /**
+     * 测试吞吐量保证金
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 10:23
+      * @param
+     * @return void
+     * @throws
+     **/
     @Test
     public void testThroughputMargin() throws Exception {
         try (final ExchangeTestContainer container = new ExchangeTestContainer(2 * 1024, 1, 1, 1536, null)) {
+
             ThroughputTestsModule.throughputTestImpl(
                     container,
                     3_000_000,
+                    //1K待定限价单
                     1000,
+                    //2K货币帐户
                     2000,
+                    //迭代
                     50,
+                    //货币期货
                     TestConstants.CURRENCIES_FUTURES,
                     1,
+                    //期货合约
                     ExchangeTestContainer.AllowedSymbolTypes.FUTURES_CONTRACT);
         }
     }

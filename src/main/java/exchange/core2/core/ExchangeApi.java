@@ -47,6 +47,7 @@ public final class ExchangeApi {
 
     private final RingBuffer<OrderCommand> ringBuffer;
 
+    // 承诺缓存 (TODO 可以更改为排队)
     // promises cache (TODO can be changed to queue)
     private final Map<Long, Consumer<OrderCommand>> promises = new ConcurrentHashMap<>();
 
@@ -61,31 +62,52 @@ public final class ExchangeApi {
         }
     }
 
+    /**
+     * 提交命令
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 9:50
+      * @param cmd
+     * @return void
+     * @throws
+     **/
     public void submitCommand(ApiCommand cmd) {
         //log.debug("{}", cmd);
 
+        // TODO 性能基准实例
         // TODO benchmark instanceof performance
 
         if (cmd instanceof ApiMoveOrder) {
+            //发布事件
             ringBuffer.publishEvent(MOVE_ORDER_TRANSLATOR, (ApiMoveOrder) cmd);
         } else if (cmd instanceof ApiPlaceOrder) {
+            //Api下单
+            //发布下单事件
             ringBuffer.publishEvent(NEW_ORDER_TRANSLATOR, (ApiPlaceOrder) cmd);
         } else if (cmd instanceof ApiCancelOrder) {
+            //发布事件
             ringBuffer.publishEvent(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder) cmd);
         } else if (cmd instanceof ApiOrderBookRequest) {
+            //发布事件
             ringBuffer.publishEvent(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest) cmd);
         } else if (cmd instanceof ApiAddUser) {
+            //发布事件
             ringBuffer.publishEvent(ADD_USER_TRANSLATOR, (ApiAddUser) cmd);
         } else if (cmd instanceof ApiAdjustUserBalance) {
+            //发布事件
             ringBuffer.publishEvent(ADJUST_USER_BALANCE_TRANSLATOR, (ApiAdjustUserBalance) cmd);
         } else if (cmd instanceof ApiBinaryDataCommand) {
+            //发布事件
             publishBinaryData((ApiBinaryDataCommand) cmd, seq -> {
             });
         } else if (cmd instanceof ApiPersistState) {
+            //发布事件
             publishPersistCmd((ApiPersistState) cmd);
         } else if (cmd instanceof ApiReset) {
+            //发布事件
             ringBuffer.publishEvent(RESET_TRANSLATOR, (ApiReset) cmd);
         } else if (cmd instanceof ApiNoOp) {
+            //发布事件
             ringBuffer.publishEvent(NOOP_TRANSLATOR, (ApiNoOp) cmd);
         } else {
             throw new IllegalArgumentException("Unsupported command type: " + cmd.getClass().getSimpleName());
@@ -207,6 +229,30 @@ public final class ExchangeApi {
     }
 
 
+    /**
+     * 定义 事件翻译器一 新订单
+     * Disruptor3.0提供了一种富Lambda风格的API，旨在帮助开发者屏蔽直接操作RingBuffer的复杂性，所以3.0以上版本发布消息更好的办法是通过事件发布者(Event Publisher)或事件翻译器(Event Translator)API。
+     * private static final EventTranslatorOneArg<LongEvent, ByteBuffer> TRANSLATOR =
+     *         new EventTranslatorOneArg<LongEvent, ByteBuffer>()
+     *         {
+     *             public void translateTo(LongEvent event, long sequence, ByteBuffer bb)
+     *             {
+     *                 event.set(bb.getLong(0));
+     *             }
+     *         };
+     *
+     *     public void onData(ByteBuffer bb)
+     *     {
+     *         ringBuffer.publishEvent(TRANSLATOR, bb);
+     *     }
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 9:29
+      * @param api 相当于 ByteBuffer
+      * @param cmd 相当于 LongEvent
+     * @return
+     * @throws
+     **/
     private static final EventTranslatorOneArg<OrderCommand, ApiPlaceOrder> NEW_ORDER_TRANSLATOR = (cmd, seq, api) -> {
         cmd.command = OrderCommandType.PLACE_ORDER;
         cmd.price = api.price;
@@ -341,6 +387,23 @@ public final class ExchangeApi {
 
     }
 
+    /**
+     * 下新订单
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 9:24
+      * @param userCookie
+     * @param price
+     * @param reservedBidPrice
+     * @param size
+     * @param action
+     * @param orderType
+     * @param symbol
+     * @param uid
+     * @param callback
+     * @return long
+     * @throws
+     **/
     public long placeNewOrder(
             int userCookie,
             long price,

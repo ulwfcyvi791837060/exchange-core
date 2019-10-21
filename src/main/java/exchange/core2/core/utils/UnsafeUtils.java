@@ -73,6 +73,18 @@ public class UnsafeUtils {
         }
     }
 
+    /**
+     * 设置结果易失
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 15:22
+      * @param cmd
+     * @param result
+     * @param successCode
+     * @param failureCode
+     * @return void
+     * @throws
+     **/
     public static void setResultVolatile(final OrderCommand cmd,
                                          final boolean result,
                                          final CommandResultCode successCode,
@@ -82,19 +94,34 @@ public class UnsafeUtils {
 
         CommandResultCode currentCode;
         do {
+            // 读取当前代码
             // read current code
             currentCode = (CommandResultCode) UNSAFE.getObjectVolatile(cmd, OFFSET_RESULT_CODE);
 
+            // 如果所需的代码已经设置完成
             // finish if desired code was already set
+            // 或有人失败了
             // or if someone has set failure
             if (currentCode == codeToSet || currentCode == failureCode) {
                 break;
             }
 
+            // 做一个CAS操作
             // do a CAS operation
+            // 不安全
         } while (!UNSAFE.compareAndSwapObject(cmd, OFFSET_RESULT_CODE, currentCode, codeToSet));
     }
 
+    /**
+     * 追加事件易失
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/21 15:24
+      * @param cmd
+     * @param eventHead
+     * @return void
+     * @throws
+     **/
     public static void appendEventsVolatile(final OrderCommand cmd,
                                             final MatcherTradeEvent eventHead) {
 
@@ -103,9 +130,11 @@ public class UnsafeUtils {
         //MatcherTradeEvent.asList(eventHead).forEach(a -> log.info("in {}", a));
 
         do {
+            // 读取当前标题并附加到新标题的尾部
             // read current head and attach to the tail of new
             tail.nextEvent = (MatcherTradeEvent) UNSAFE.getObjectVolatile(cmd, OFFSET_EVENT);
 
+            // 做一个CAS操作
             // do a CAS operation
         } while (!UNSAFE.compareAndSwapObject(cmd, OFFSET_EVENT, tail.nextEvent, eventHead));
     }
