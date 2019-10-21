@@ -68,6 +68,7 @@ public final class TestOrdersGenerator {
 
     public static final UnaryOperator<Integer> UID_PLAIN_MAPPER = i -> i + 1;
 
+    // TODO 允许限制最大音量
     // TODO allow limiting max volume
 
 
@@ -117,7 +118,7 @@ public final class TestOrdersGenerator {
         executor.shutdown();
 
         final int readyAtSequenceApproximate = genResults.values().stream().mapToInt(TestOrdersGenerator.GenResult::getOrderbooksFilledAtSequence).sum();
-        log.debug("readyAtSequenceApproximate={}", readyAtSequenceApproximate);
+        log.debug("准备好序列近似 readyAtSequenceApproximate={}", readyAtSequenceApproximate);
 
         final List<OrderCommand> allCommands = TestOrdersGenerator.mergeCommands(genResults.values());
 

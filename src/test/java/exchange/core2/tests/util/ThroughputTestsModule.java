@@ -76,8 +76,11 @@ public class ThroughputTestsModule {
 
             //产生多个符号
             final TestOrdersGenerator.MultiSymbolGenResult genResult = TestOrdersGenerator.generateMultipleSymbols(
+                    // 核心符号规格
                     coreSymbolSpecifications,
+                    // 总交易数
                     totalTransactionsNumber,
+                    //用户帐号
                     usersAccounts,
                     //1K待定限价单
                     targetOrderBookOrdersTotal);
@@ -97,6 +100,7 @@ public class ThroughputTestsModule {
                 container.setConsumer(cmd -> latchFill.countDown());
                 //提交命令 api.submitCommand()
                 genResult.getApiCommandsFill().forEach(api::submitCommand);
+                //等待闩锁填充
                 latchFill.await();
 
                 //闩锁基准
@@ -104,12 +108,15 @@ public class ThroughputTestsModule {
                 container.setConsumer(cmd -> latchBenchmark.countDown());
                 long t = System.currentTimeMillis();
                 genResult.getApiCommandsBenchmark().forEach(api::submitCommand);
+                //等待闩锁基准
                 latchBenchmark.await();
                 t = System.currentTimeMillis() - t;
                 float perfMt = (float) genResult.getApiCommandsBenchmark().size() / (float) t / 1000.0f;
                 log.info("{}. {} MT/s", j, String.format("%.3f", perfMt));
+
                 perfResults.add(perfMt);
 
+                //总余额报告
                 assertThat(container.totalBalanceReport().getSum(), is(globalBalancesExpected));
 
                 // 比较orderBook的最终状态只是为了确保所有命令都以相同的方式执行
