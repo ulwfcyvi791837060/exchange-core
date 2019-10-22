@@ -64,6 +64,7 @@ public final class UserCurrencyAccountsGenerator {
 
         } while (totalAccountsQuota > 0);
 
+        //产生1001个用户，拥有2000个帐户（最多2种不同的货币）
         log.debug("Generated {} users with {} accounts up to {} different currencies", result.size(), accountsToCreate, currencies.size());
         return result;
     }

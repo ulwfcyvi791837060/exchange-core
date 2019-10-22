@@ -51,6 +51,21 @@ public class DiskSerializationProcessor implements ISerializationProcessor {
 
         final Path path = resolvePath(snapshotId, type, instanceId);
 
+        /**
+         * 不用这段代码 新建dumps文件夹就可以
+         * todo 新建dumps文件夹
+         * @Author zenghuikang
+         **/
+        /*Path newPath = path.toAbsolutePath();
+        File file=newPath.toFile();
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }*/
+
         log.debug("Writing state to {} ...", path);
 
         try (final OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE_NEW);

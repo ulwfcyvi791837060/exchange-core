@@ -43,10 +43,10 @@ public final class OrderCommand implements IOrder {
     public long size;
 
     @Getter
-    // new orders - reserved price for fast moves of GTC bid orders in exchange mode
+    // new orders - reserved price for fast moves of GTC bid orders in exchange mode 新订单-在交换模式下GTC投标订单快速移动的保留价格
     public long reserveBidPrice;
 
-    // required for PLACE_ORDER only;
+    // required for PLACE_ORDER only; 仅对于PLACE_ORDER是必需的；
     @Getter
     public OrderAction action;
 
@@ -60,23 +60,23 @@ public final class OrderCommand implements IOrder {
 
     public int userCookie;
 
-    // filled by grouping processor:
+    // filled by grouping processor: 由分组处理器填充
 
     public long eventsGroup;
     public int serviceFlags;
 
-    // result code of command execution - can also be used for saving intermediate state
+    // result code of command execution - can also be used for saving intermediate state 命令执行的结果代码-也可以用于保存中间状态
     public CommandResultCode resultCode;
 
-    // trade events chain
+    // trade events chain 贸易事件链
     public MatcherTradeEvent matcherEvent;
 
-    // optional market data
+    // optional market data 可选市场数据
     public L2MarketData marketData;
 
-    // sequence of last available for this command
-    //public long matcherEventSequence;
-    // ---- potential false sharing section ------
+    // sequence of last available for this command 该命令最后可用的顺序
+    //public long matcherEventSequence; 匹配器事件序列
+    // ---- potential false sharing section ------ 潜在的虚假分享部分
 
     public static OrderCommand newOrder(OrderType orderType, long orderId, int uid, long price, long reserveBidPrice, long size, OrderAction action) {
         OrderCommand cmd = new OrderCommand();
@@ -112,7 +112,7 @@ public final class OrderCommand implements IOrder {
     }
 
     /**
-     * Handles full MatcherTradeEvent chain, without removing/revoking them
+     * Handles full MatcherTradeEvent chain, without removing/revoking them 处理完整的MatcherTradeEvent链，而无需删除/撤销它们
      *
      * @param handler - MatcherTradeEvent handler
      */
@@ -126,7 +126,7 @@ public final class OrderCommand implements IOrder {
 
     /**
      * Produces garbage
-     * For testing only !!!
+     * For testing only !!! 产生垃圾仅用于测试
      *
      * @return
      */
@@ -150,7 +150,7 @@ public final class OrderCommand implements IOrder {
 
 
     /**
-     * Write only command data, not status or events
+     * Write only command data, not status or events 只写命令数据，不写状态或事件
      *
      * @param cmd2
      */
@@ -181,7 +181,7 @@ public final class OrderCommand implements IOrder {
             MatcherTradeEvent copy = event.copy();
             copy.nextEvent = newCmd.matcherEvent;
             newCmd.matcherEvent = copy;
-//            System.out.println(">>> newCmd.matcherEvent: " + newCmd.matcherEvent);
+//            System.out.println(">>> 新的Cmd.matcher事件： newCmd.matcherEvent: " + newCmd.matcherEvent);
         }
 
         if (marketData != null) {

@@ -48,11 +48,11 @@ public final class PerfThroughput {
      * - one symbol
      * - ~1K active users (2K currency accounts)
      * - 1K pending limit-orders (in one order book)
-     * 6-threads CPU can run this test
+     * 6-threads CPU can run this test 6线程CPU可以运行此测试
      */
 
     /**
-     * 测试吞吐量保证金
+     * 测试吞吐量保证金 6线程CPU可以运行此测试
      * @Author zenghuikang
      * @Description
      * @Date 2019/10/21 10:23
@@ -66,7 +66,7 @@ public final class PerfThroughput {
 
             ThroughputTestsModule.throughputTestImpl(
                     container,
-                    3_000_000,
+                    1_000_000, //原来 3_000_000 , java.lang.OutOfMemoryError
                     //1K待定限价单
                     1000,
                     //2K货币帐户
@@ -81,15 +81,25 @@ public final class PerfThroughput {
         }
     }
 
+    /**
+     * 测试吞吐量交换
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/22 12:24
+      * @param
+     * @return void
+     * @throws
+     **/
     @Test
     public void testThroughputExchange() throws Exception {
         try (final ExchangeTestContainer container = new ExchangeTestContainer(2 * 1024, 1, 1, 1536, null)) {
             ThroughputTestsModule.throughputTestImpl(
                     container,
-                    3_000_000,
+                    1_000_000,//3_000_000,
                     1000,
                     2000,
                     50,
+                    //货币兑换
                     TestConstants.CURRENCIES_EXCHANGE,
                     1,
                     ExchangeTestContainer.AllowedSymbolTypes.CURRENCY_EXCHANGE_PAIR);
@@ -102,8 +112,17 @@ public final class PerfThroughput {
      * - 1M pending limit-orders (in 1K order books)
      * - 1K symbols
      * - at least 1M messages per second throughput
-     * 12-threads CPU and 32GiB RAM is required for running this test in 4+4 configuration.
+     * 12-threads CPU and 32GiB RAM is required for running this test in 4+4 configuration. 在4 + 4配置中运行此测试需要12线程CPU和32GiB RAM。
      */
+    /**
+     * 测试吞吐量多符号
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/22 12:25
+      * @param
+     * @return void
+     * @throws
+     **/
     @Test
     public void testThroughputMultiSymbol() throws Exception {
         try (final ExchangeTestContainer container = new ExchangeTestContainer(64 * 1024, 4, 4, 2048, null)) {

@@ -87,6 +87,7 @@ public final class TestOrdersGenerator {
 
         final LongConsumer sharedProgressLogger = createAsyncProgressLogger(totalTransactionsNumber);
 
+        //填充模拟单
         //int[] stat = new int[4];
         for (int i = 0; i < coreSymbolSpecifications.size(); i++) {
             final CoreSymbolSpecification spec = coreSymbolSpecifications.get(i);
@@ -94,18 +95,24 @@ public final class TestOrdersGenerator {
             final int commandsNum = (i != coreSymbolSpecifications.size() - 1) ? (int) (totalTransactionsNumber * distribution[i]) : quotaLeft;
             quotaLeft -= commandsNum;
             //log.debug("{}. Generating symbol {} : commands={} numOrdersTarget={}", i, symbolId, commandsNum, numOrdersTarget);
-            futures.put(spec.symbolId, CompletableFuture.supplyAsync(() -> {
-                final int[] uidsAvailableForSymbol = UserCurrencyAccountsGenerator.createUserListForSymbol(usersAccounts, spec, commandsNum);
-                final int numUsers = uidsAvailableForSymbol.length;
-                final UnaryOperator<Integer> uidMapper = idx -> uidsAvailableForSymbol[idx];
-                return generateCommands(commandsNum, numOrdersTarget, numUsers, uidMapper, spec.symbolId, false, sharedProgressLogger);
-            }, executor));
+
+            futures.put(spec.symbolId,
+                    //value
+                    CompletableFuture.supplyAsync(() -> {
+                        final int[] uidsAvailableForSymbol = UserCurrencyAccountsGenerator.createUserListForSymbol(usersAccounts, spec, commandsNum);
+                        final int numUsers = uidsAvailableForSymbol.length;
+                        final UnaryOperator<Integer> uidMapper = idx -> uidsAvailableForSymbol[idx];
+
+                        return generateCommands(commandsNum, numOrdersTarget, numUsers, uidMapper, spec.symbolId, false, sharedProgressLogger);
+                    }, executor)
+                    );
 
             //stat[symbolId%4] += numOrdersTarget;
         }
 
         //log.debug("stat: {}", stat);
 
+        //存订单
         final Map<Integer, GenResult> genResults = new HashMap<>();
         futures.forEach((symbol, future) -> {
             try {
@@ -125,6 +132,8 @@ public final class TestOrdersGenerator {
         printStatistics(readyAtSequenceApproximate, allCommands);
 
         final List<ApiCommand> apiCommandsFill = TestOrdersGenerator.convertToApiCommand(allCommands, 0, readyAtSequenceApproximate);
+
+        //转换为Api命令
         final List<ApiCommand> apiCommandsBenchmark = TestOrdersGenerator.convertToApiCommand(allCommands, readyAtSequenceApproximate, allCommands.size());
 
         return MultiSymbolGenResult.builder()
@@ -162,6 +171,7 @@ public final class TestOrdersGenerator {
         };
     }
 
+    //生成命令
     public static GenResult generateCommands(
             final int transactionsNumber,
             final int targetOrderBookOrders,
@@ -171,13 +181,14 @@ public final class TestOrdersGenerator {
             final boolean enableSlidingPrice,
             final LongConsumer asyncProgressConsumer) {
 
+        // TODO 指定符号类型
         // TODO specify symbol type
         final IOrderBook orderBook = new OrderBookNaiveImpl(SYMBOLSPEC_EUR_USD);
 
         final TestOrdersGeneratorSession session = new TestOrdersGeneratorSession(
                 orderBook,
                 targetOrderBookOrders,
-                PRICE_DEVIATION_DEFAULT,
+                PRICE_DEVIATION_DEFAULT, //价格偏差默认
                 numUsers,
                 uidMapper,
                 symbol,
@@ -209,7 +220,7 @@ public final class TestOrdersGenerator {
             cmd.resultCode = CommandResultCode.VALID_FOR_MATCHING_ENGINE;
             commands.add(cmd);
 
-            // process and cleanup matcher events
+            // process and cleanup matcher events 进程和清理匹配器事件
             cmd.processMatcherEvents(ev -> matcherTradeEventEventHandler(session, ev));
             cmd.matcherEvent = null;
 
@@ -264,7 +275,7 @@ public final class TestOrdersGenerator {
 
         //log.info("gen: {}", LatencyTools.createLatencyReportFast(session.hdrRecorder.getIntervalHistogram()));
 
-        return GenResult.builder().commands(commands)
+        return GenResult.builder().commands(commands) //List<OrderCommand> commands
                 .finalOrderbookHash(orderBook.hashCode())
                 .finalOrderBookSnapshot(l2MarketData)
                 .orderbooksFilledAtSequence((int) session.orderbooksFilledAtSequence)
@@ -450,6 +461,17 @@ public final class TestOrdersGenerator {
         return convertToApiCommand(commands, 0, commands.size());
     }
 
+    /**
+     * 转换为Api命令
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/22 13:31
+      * @param commands
+     * @param from
+     * @param to
+     * @return java.util.List<exchange.core2.core.common.api.ApiCommand>
+     * @throws
+     **/
     public static List<ApiCommand> convertToApiCommand(List<OrderCommand> commands, int from, int to) {
         return commands.stream()
                 .skip(from)
@@ -479,16 +501,16 @@ public final class TestOrdersGenerator {
         final int counterCancel = commandsByType.get(OrderCommandType.CANCEL_ORDER).size();
         final int counterMove = commandsByType.get(OrderCommandType.MOVE_ORDER).size();
 
-        log.debug("new GTC: {} ({}%)", counterPlaceGTC, (float) counterPlaceGTC / (float) commandsListSize * 100.0f);
-        log.debug("new IOC: {} ({}%)", counterPlaceIOC, (float) counterPlaceIOC / (float) commandsListSize * 100.0f);
-        log.debug("cancel: {} ({}%)", counterCancel, (float) counterCancel / (float) commandsListSize * 100.0f);
-        log.debug("move: {} ({}%)", counterMove, (float) counterMove / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 new GTC: {} ({}%)", counterPlaceGTC, (float) counterPlaceGTC / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 new IOC: {} ({}%)", counterPlaceIOC, (float) counterPlaceIOC / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 cancel: {} ({}%)", counterCancel, (float) counterCancel / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 move: {} ({}%)", counterMove, (float) counterMove / (float) commandsListSize * 100.0f);
 
         final Map<Integer, Long> perSymbols = allCommands.stream().skip(readyAtSequenceApproximate).collect(Collectors.groupingBy(cmd -> cmd.symbol, Collectors.counting()));
         final LongSummaryStatistics symbolStat = perSymbols.values().stream().collect(Collectors.summarizingLong(n -> n));
-        log.debug("max commands per symbol: {} ({}%)", symbolStat.getMax(), (float) symbolStat.getMax() / (float) commandsListSize * 100.0f);
-        log.debug("avg commands per symbol: {} ({}%)", (int) symbolStat.getAverage(), (float) symbolStat.getAverage() / (float) commandsListSize * 100.0f);
-        log.debug("min commands per symbol: {} ({}%)", symbolStat.getMin(), (float) symbolStat.getMin() / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 max commands per symbol: {} ({}%)", symbolStat.getMax(), (float) symbolStat.getMax() / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 avg commands per symbol: {} ({}%)", (int) symbolStat.getAverage(), (float) symbolStat.getAverage() / (float) commandsListSize * 100.0f);
+        log.debug("打印统计 min commands per symbol: {} ({}%)", symbolStat.getMin(), (float) symbolStat.getMin() / (float) commandsListSize * 100.0f);
     }
 
     @Builder

@@ -82,29 +82,29 @@ public final class ExchangeApi {
             ringBuffer.publishEvent(MOVE_ORDER_TRANSLATOR, (ApiMoveOrder) cmd);
         } else if (cmd instanceof ApiPlaceOrder) {
             //Api下单
-            //发布下单事件
+            //发布事件 下单
             ringBuffer.publishEvent(NEW_ORDER_TRANSLATOR, (ApiPlaceOrder) cmd);
         } else if (cmd instanceof ApiCancelOrder) {
-            //发布事件
+            //发布事件 取消订单
             ringBuffer.publishEvent(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder) cmd);
         } else if (cmd instanceof ApiOrderBookRequest) {
-            //发布事件
+            //发布事件 订单需求
             ringBuffer.publishEvent(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest) cmd);
         } else if (cmd instanceof ApiAddUser) {
-            //发布事件
+            //发布事件 添加用户
             ringBuffer.publishEvent(ADD_USER_TRANSLATOR, (ApiAddUser) cmd);
         } else if (cmd instanceof ApiAdjustUserBalance) {
-            //发布事件
+            //发布事件 调整用户平衡
             ringBuffer.publishEvent(ADJUST_USER_BALANCE_TRANSLATOR, (ApiAdjustUserBalance) cmd);
         } else if (cmd instanceof ApiBinaryDataCommand) {
-            //发布事件
+            //发布事件 二进制数据
             publishBinaryData((ApiBinaryDataCommand) cmd, seq -> {
             });
         } else if (cmd instanceof ApiPersistState) {
-            //发布事件
+            //发布事件 持久化状态
             publishPersistCmd((ApiPersistState) cmd);
         } else if (cmd instanceof ApiReset) {
-            //发布事件
+            //发布事件 重置
             ringBuffer.publishEvent(RESET_TRANSLATOR, (ApiReset) cmd);
         } else if (cmd instanceof ApiNoOp) {
             //发布事件
@@ -199,6 +199,7 @@ public final class ExchangeApi {
 
         try {
             // will be ignored by risk handlers, but processed by matching engine
+            // 将被风险处理程序忽略，但由匹配引擎处理
             final OrderCommand cmdMatching = ringBuffer.get(firstSeq);
             cmdMatching.command = OrderCommandType.PERSIST_STATE_MATCHING;
             cmdMatching.orderId = api.dumpId;
@@ -210,6 +211,7 @@ public final class ExchangeApi {
 
             //log.debug("seq={} cmd.command={} data={}", firstSeq, cmdMatching.command, cmdMatching.price);
 
+            // 顺序命令将使风险处理程序创建快照
             // sequential command will make risk handler to create snapshot
             final OrderCommand cmdRisk = ringBuffer.get(secondSeq);
             cmdRisk.command = OrderCommandType.PERSIST_STATE_RISK;
@@ -223,6 +225,7 @@ public final class ExchangeApi {
             //log.debug("seq={} cmd.command={} data={}", firstSeq, cmdMatching.command, cmdMatching.price);
 
             // short delay to reduce probability of batching both commands together in R1
+            // 较短的延迟，以减少在R1中将两个命令一起批处理的可能性
         } finally {
             ringBuffer.publish(firstSeq, secondSeq);
         }

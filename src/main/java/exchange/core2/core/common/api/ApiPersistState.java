@@ -22,6 +22,7 @@ import lombok.Builder;
 public final class ApiPersistState extends ApiCommand {
 
     public long dumpId;
+    //密封
     public boolean seal;
 
     @Override

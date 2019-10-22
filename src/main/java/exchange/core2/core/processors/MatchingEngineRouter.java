@@ -135,7 +135,7 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
             }
 
         } else if (command == OrderCommandType.PERSIST_STATE_MATCHING) {
-            //持久匹配状态
+            //持久化匹配状态
             final boolean isSuccess = serializationProcessor.storeData(cmd.orderId, ISerializationProcessor.SerializedModuleType.MATCHING_ENGINE_ROUTER, shardId, this);
             // 发送ACCEPTED，因为这是系列中的第一个命令。风险引擎位居第二-因此它将返回SUCCESS
             // Send ACCEPTED because this is a first command in series. Risk engine is second - so it will return SUCCESS

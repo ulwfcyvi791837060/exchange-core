@@ -135,6 +135,7 @@ public abstract class ITOrderBookBase {
             }
 
             double avg = (float) perfResults.stream().mapToDouble(x -> x).average().orElse(0);
+            log.info("平均每秒{}万次 ", avg*100);
             log.info("Average: {} MT/s", avg);
         }
     }

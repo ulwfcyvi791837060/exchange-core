@@ -58,6 +58,26 @@ public final class ExchangeCore {
     private boolean started = false;
     private boolean stopped = false;
 
+    /**
+     * 使用@Builder来进行对象赋值，我们直接在类上加@Builder之后，我们的继承就被无情的屏蔽了，这主要是由于构造方法与父类冲突的问题导致的，
+     * 事实上，我们可以把@Builder注解加到子类的全参构造方法上就可以了！
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/22 9:31
+      * @param resultsConsumer  ExchangeTestContainer 传过来  接受一个object类型和一个long类型的输入参数，无返回值。
+     * @param journallingHandler
+     * @param serializationProcessor
+     * @param ringBufferSize
+     * @param matchingEnginesNum
+     * @param riskEnginesNum
+     * @param msgsInGroupLimit
+     * @param threadAffinityMode
+     * @param waitStrategy
+     * @param orderBookFactory
+     * @param loadStateId
+     * @return
+     * @throws
+     **/
     @Builder
     public ExchangeCore(final ObjLongConsumer<OrderCommand> resultsConsumer,
                         final JournallingProcessor journallingHandler,
@@ -71,6 +91,7 @@ public final class ExchangeCore {
                         final Function<CoreSymbolSpecification, IOrderBook> orderBookFactory,
                         final Long loadStateId) {
 
+        //全项目就一个圆
         this.disruptor = new Disruptor<>(
                 OrderCommand::new,
                 ringBufferSize,
@@ -182,6 +203,10 @@ public final class ExchangeCore {
         // 4. results handler (E) after matching engine (ME) + [journalling (J)]
         (journallingHandler != null ? disruptor.after(ArrayUtils.add(matchingEngineHandlers, journallingHandler::onEvent)) : afterMatchingEngine)
                 .handleEventsWith((cmd, seq, eob) -> {
+                    /**
+                     * 函数式接口,有一个抽象方法，会被lambda表达式的定义所覆盖。
+                     * 处理两个两个参数,且第二个参数必须为long类型
+                     **/
                     resultsConsumer.accept(cmd, seq);
                     // TODO 待办事项缓慢？（易失性操作）
                     // TODO SLOW ?(volatile operations)

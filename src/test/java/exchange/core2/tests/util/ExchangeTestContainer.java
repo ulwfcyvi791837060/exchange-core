@@ -90,8 +90,10 @@ public final class ExchangeTestContainer implements AutoCloseable {
                                  final Long stateId) {
 
         this.exchangeCore = ExchangeCore.builder()
-                .resultsConsumer((cmd, seq) -> consumer.accept(cmd))
-                .serializationProcessor(new DiskSerializationProcessor("./dumps"))
+                //以下表达式相当于往构造方法传参数
+                .resultsConsumer((cmd, seq) -> consumer.accept(cmd)) //暂时是最后的disruptor 节点处理器 对给定的参数执行此操作。
+                //.serializationProcessor(new DiskSerializationProcessor("./dumps")) linux
+                .serializationProcessor(new DiskSerializationProcessor("dumps")) //windows ul
                 .ringBufferSize(bufferSize)
                 .matchingEnginesNum(matchingEnginesNum)
                 .riskEnginesNum(riskEnginesNum)
@@ -103,6 +105,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
                 .loadStateId(stateId) // Loading from persisted state
                 .build();
 
+        //启动disruptor
         this.exchangeCore.startup();
         api = this.exchangeCore.getApi();
     }

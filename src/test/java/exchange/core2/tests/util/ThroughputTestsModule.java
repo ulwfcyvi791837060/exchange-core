@@ -36,6 +36,7 @@ public class ThroughputTestsModule {
 
 
     /**
+     * 由性能吞吐量 PerfThroughput 这个类调用
      * 吞吐量测试Impl
      * @Author zenghuikang
      * @Description
@@ -74,7 +75,7 @@ public class ThroughputTestsModule {
             //产生用户 2K货币帐户
             final List<BitSet> usersAccounts = UserCurrencyAccountsGenerator.generateUsers(numAccounts, currenciesAllowed);
 
-            //产生多个符号
+            //产生多个符号 TestOrdersGenerator
             final TestOrdersGenerator.MultiSymbolGenResult genResult = TestOrdersGenerator.generateMultipleSymbols(
                     // 核心符号规格
                     coreSymbolSpecifications,
@@ -97,20 +98,26 @@ public class ThroughputTestsModule {
                 assertThat(container.totalBalanceReport().getSum(), is(globalBalancesExpected));
 
                 final CountDownLatch latchFill = new CountDownLatch(genResult.getApiCommandsFill().size());
-                container.setConsumer(cmd -> latchFill.countDown());
+                container.setConsumer(cmd -> latchFill.countDown()); //latchFill.countDown() 暂时将在最后一个节点的消费者真正执行
                 //提交命令 api.submitCommand()
-                genResult.getApiCommandsFill().forEach(api::submitCommand);
+                genResult.getApiCommandsFill().forEach(api::submitCommand); //生产者
                 //等待闩锁填充
                 latchFill.await();
 
                 //闩锁基准
                 final CountDownLatch latchBenchmark = new CountDownLatch(genResult.getApiCommandsBenchmark().size());
-                container.setConsumer(cmd -> latchBenchmark.countDown());
+                container.setConsumer(cmd -> latchBenchmark.countDown()); //暂时将在最后一个节点的消费者真正执行
+
+                //开始计时
                 long t = System.currentTimeMillis();
                 genResult.getApiCommandsBenchmark().forEach(api::submitCommand);
                 //等待闩锁基准
                 latchBenchmark.await();
+
+                //结束计时
                 t = System.currentTimeMillis() - t;
+
+
                 float perfMt = (float) genResult.getApiCommandsBenchmark().size() / (float) t / 1000.0f;
                 log.info("{}. {} MT/s", j, String.format("%.3f", perfMt));
 
@@ -139,7 +146,7 @@ public class ThroughputTestsModule {
             float avg = (float) perfResults.stream().mapToDouble(x -> x).average().orElse(0);
             // 20191020 在笔记本测试是 67647 次
             log.info("平均每秒多少次 M 是6个0 : {} MT/s", avg);
-            log.info("平均每秒多少次 M 是6个0 : {} MT/s", avg);
+            log.info("平均每秒{}万次 ", avg*100);
             log.info("Average: {} MT/s", avg);
         }
     }

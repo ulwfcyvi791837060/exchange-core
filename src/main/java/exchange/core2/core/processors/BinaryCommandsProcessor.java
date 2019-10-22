@@ -38,10 +38,11 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * Stateful Binary Commands Processor
+ *
+ * Stateful Binary Commands Processor 有状态的二进制命令处理器
  * <p>
- * Has incoming data buffer
- * Can receive events in arbitrary order and duplicates - at-least-once-delivery compatible.
+ * Has incoming data buffer 有传入数据缓冲区
+ * Can receive events in arbitrary order and duplicates - at-least-once-delivery compatible. 可以按任意顺序接收事件并重复-至少一次传递兼容。
  */
 @Slf4j
 public final class BinaryCommandsProcessor implements WriteBytesMarshallable, StateHash {

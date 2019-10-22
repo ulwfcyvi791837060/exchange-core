@@ -140,6 +140,7 @@ public final class PerfLatency {
 
             final SingleWriterRecorder hdrRecorder = new SingleWriterRecorder(Integer.MAX_VALUE, 2);
 
+            // TODO - 第一次运行应验证输出（正确接受和处理订单）
             // TODO - first run should validate the output (orders are accepted and processed properly)
 
             final BiFunction<Integer, Boolean, Boolean> testIteration = (tps, warmup) -> {

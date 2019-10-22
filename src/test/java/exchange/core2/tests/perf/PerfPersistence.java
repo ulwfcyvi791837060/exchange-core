@@ -26,7 +26,7 @@ public final class PerfPersistence {
 
 
     /**
-     * This is serialization test for simplified conditions
+     * This is serialization test for simplified conditions 这是针对简化条件的序列化测试
      * - one symbol
      * - ~1K active users (2K currency accounts)
      * - 1K pending limit-orders (in one order book)
@@ -35,7 +35,7 @@ public final class PerfPersistence {
     @Test
     public void testPersistenceMargin() throws Exception {
         PersistenceTestsModule.persistenceTestImpl(
-                3_000_000,
+                3000,//3_000_000,
                 1000,
                 2000,
                 10,
