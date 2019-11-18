@@ -95,13 +95,14 @@ public class DiskSerializationProcessor implements ISerializationProcessor {
     @Override
     public <T> T loadData(long snapshotId, SerializedModuleType type, int instanceId, Function<BytesIn, T> initFunc) {
 
+        //loadStateId == currentTimeMillis ?
         final Path path = resolvePath(snapshotId, type, instanceId);
 
         log.debug("Loading state from {}", path);
         try (final InputStream is = Files.newInputStream(path, StandardOpenOption.READ);
              final InputStream bis = new BufferedInputStream(is)) {
 
-            // TODO improve reading algorithm
+            // TODO improve reading algorithm 改善阅读算法
             final InputStreamToWire inputStreamToWire = new InputStreamToWire(WireType.RAW, bis);
             final Wire wire = inputStreamToWire.readOne();
 

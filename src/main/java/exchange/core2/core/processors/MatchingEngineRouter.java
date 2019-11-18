@@ -75,6 +75,7 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
 
         if (loadStateId != null) {
             final Pair<BinaryCommandsProcessor, IntObjectHashMap<IOrderBook>> deserialized = serializationProcessor.loadData(
+                    //loadStateId == currentTimeMillis ?
                     loadStateId,
                     ISerializationProcessor.SerializedModuleType.MATCHING_ENGINE_ROUTER,
                     shardId,
@@ -112,6 +113,7 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
 
         final OrderCommandType command = cmd.command;
 
+        //下单等
         if (command == OrderCommandType.MOVE_ORDER || command == OrderCommandType.CANCEL_ORDER || command == OrderCommandType.ORDER_BOOK_REQUEST || command == OrderCommandType.PLACE_ORDER) {
             // 仅处理特定的符号组
             // process specific symbol group only
@@ -119,7 +121,7 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
                 processMatchingCommand(cmd);
             }
         } else if (command == OrderCommandType.BINARY_DATA) {
-
+            //二进制数据
             final boolean isLastFrame = binaryCommandsProcessor.acceptBinaryFrame(cmd);
             if (shardId == 0) {
                 cmd.resultCode = isLastFrame ? CommandResultCode.SUCCESS : CommandResultCode.ACCEPTED;
@@ -139,6 +141,8 @@ public final class MatchingEngineRouter implements WriteBytesMarshallable, State
             final boolean isSuccess = serializationProcessor.storeData(cmd.orderId, ISerializationProcessor.SerializedModuleType.MATCHING_ENGINE_ROUTER, shardId, this);
             // 发送ACCEPTED，因为这是系列中的第一个命令。风险引擎位居第二-因此它将返回SUCCESS
             // Send ACCEPTED because this is a first command in series. Risk engine is second - so it will return SUCCESS
+
+            //失败
             UnsafeUtils.setResultVolatile(cmd, isSuccess, CommandResultCode.ACCEPTED, CommandResultCode.STATE_PERSIST_MATCHING_ENGINE_FAILED);
         }
 

@@ -70,7 +70,7 @@ public final class WaitSpinningHelper {
             f.setAccessible(true);
             return (Sequencer) f.get(ringBuffer);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException("Can not access Disruptor internals: ", e);
+            throw new IllegalStateException("Can not access Disruptor internals 无法访问Disruptor内部 : ", e);
         }
     }
 

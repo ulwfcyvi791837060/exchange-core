@@ -107,7 +107,10 @@ public class PersistenceTestsModule {
 
                     log.info("持久化中... Persisting...");
                     final long tc = System.currentTimeMillis();
+
+                    // currentTimeMillis
                     stateId = tc;
+
                     container.submitMultiCommandSync(ApiPersistState.builder().dumpId(stateId).build());
                     final float persistTimeSec = (float) (System.currentTimeMillis() - tc) / 1000.0f;
                     log.debug("持久化中... Persisting time: {}s", String.format("%.3f", persistTimeSec));
@@ -140,6 +143,9 @@ public class PersistenceTestsModule {
             log.debug("Creating new exchange from persisted state...");
             log.debug("从持久状态创建新交换...");
             final long tLoad = System.currentTimeMillis();
+
+            //根据 stateId 从持久状态创建新交换
+
             try (final ExchangeTestContainer recreatedContainer = new ExchangeTestContainer(bufferSize, matchingEngines, riskEngines, msgsInGroupLimit, stateId)) {
                 float loadTimeSec = (float) (System.currentTimeMillis() - tLoad) / 1000.0f;
                 log.debug("加载+开始时间 Load+start time: {}s", String.format("%.3f", loadTimeSec));

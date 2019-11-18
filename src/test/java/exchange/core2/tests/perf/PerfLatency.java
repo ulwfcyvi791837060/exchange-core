@@ -47,7 +47,7 @@ public final class PerfLatency {
     private static final boolean WRITE_HDR_HISTOGRAMS = false;
 
     /**
-     * This is latency test for simplified conditions
+     * This is latency test for simplified conditions 这是针对简化条件的延迟测试
      * - one symbol
      * - ~1K active users (2K currency accounts)
      * - 1K pending limit-orders (in one order book)

@@ -119,6 +119,7 @@ public final class ExchangeCore {
         // creating matching engine event handlers array // TODO parallel deserialization 并行反序列化
         final EventHandler<OrderCommand>[] matchingEngineHandlers = IntStream.range(0, matchingEnginesNum)
                 .mapToObj(shardId -> {
+                    //loadStateId == currentTimeMillis ?
                     final MatchingEngineRouter router = new MatchingEngineRouter(shardId, matchingEnginesNum, serializationProcessor, orderBookFactory, loadStateId);
                     // 应该只是定义,在需要的时候才会运行
                     return (EventHandler<OrderCommand>) (cmd, seq, eob) -> router.processOrder(cmd);
@@ -128,7 +129,9 @@ public final class ExchangeCore {
         // 定义风险引擎数组
         // creating risk engines array // TODO parallel deserialization 并行反序列化
         final List<RiskEngine> riskEngines = IntStream.range(0, riskEnginesNum)
+                //loadStateId == currentTimeMillis ?
                 .mapToObj(shardId -> new RiskEngine(shardId, riskEnginesNum, serializationProcessor, loadStateId))
+                //收集
                 .collect(Collectors.toList());
 
         final List<TwoStepMasterProcessor> procR1 = new ArrayList<>(riskEnginesNum);

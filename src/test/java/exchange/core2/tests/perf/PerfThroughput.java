@@ -92,7 +92,9 @@ public final class PerfThroughput {
      **/
     @Test
     public void testThroughputExchange() throws Exception {
-        try (final ExchangeTestContainer container = new ExchangeTestContainer(2 * 1024, 1, 1, 1536, null)) {
+        //stateId = null 不从持久化状态加载
+        try (final ExchangeTestContainer container = new ExchangeTestContainer(2 * 1024, 1,
+                1, 1536, null)) {
             ThroughputTestsModule.throughputTestImpl(
                     container,
                     1_000_000,//3_000_000,

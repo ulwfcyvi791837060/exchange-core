@@ -24,13 +24,22 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.function.Supplier;
 
+/**
+ * 核心等待策略
+ * @Author zenghuikang
+ * @Description
+ * @Date 2019/10/25 14:03
+  * @param null
+ * @return
+ * @throws
+ **/
 @RequiredArgsConstructor
 public enum CoreWaitStrategy {
     BUSY_SPIN(BusySpinWaitStrategy::new, false, false),
     YIELDING(YieldingWaitStrategy::new, true, false),
     SLEEPING(SleepingWaitStrategy::new, true, true),
 
-    // special case
+    // special case 特例
     NO_WAIT(() -> null, false, false);
 
     private final Supplier<WaitStrategy> supplier;
@@ -38,6 +47,7 @@ public enum CoreWaitStrategy {
     @Getter
     private final boolean yield;
 
+    //停放
     @Getter
     private final boolean park;
 

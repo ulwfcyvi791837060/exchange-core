@@ -37,6 +37,15 @@ public final class PerfHiccups {
 
     private long nextHiccupAcceptTimestampNs = 0;
 
+    /**
+     * test打嗝儿
+     * @Author zenghuikang
+     * @Description
+     * @Date 2019/10/23 8:56
+      * @param
+     * @return void
+     * @throws
+     **/
     @Test
     public void testHiccups() {
 
@@ -44,7 +53,7 @@ public final class PerfHiccups {
         final int targetOrderBookOrders = 1000;
         final int numUsers = 2000;
 
-        // will print each occurrence if latency>0.2ms
+        // will print each occurrence if latency>0.2ms 如果延迟，将打印每个事件
         final long hiccupThresholdNs = 200_000;
 
         final int targetTps = 500_000; // transactions per second

@@ -55,11 +55,20 @@ public final class TwoStepMasterProcessor implements EventProcessor {
         this.exceptionHandler = exceptionHandler;
     }
 
+    /**
+     * 获取到{@link序列}参考正被此{@link EventProcessor}。
+     *
+     * @返回参照{@link序列}此{@link EventProcessor}
+     **/
     @Override
     public Sequence getSequence() {
         return sequence;
     }
 
+    /**
+     * 信号，当它已经完成了在下一一刀两断消费这EventProcessor应该停止。
+     * 它会调用{@link SequenceBarrier＃警报（）}通知线程检查状态。
+     **/
     @Override
     public void halt() {
         running.set(HALTED);
@@ -90,6 +99,7 @@ public final class TwoStepMasterProcessor implements EventProcessor {
                 running.set(IDLE);
             }
         } else {
+            //这是一些猜测工作。此时，运行状态可以更改为“已暂停”。但是，Java没有compareAndExchange，这是使其完全正确的唯一方法。
             // This is a little bit of guess work.  The running state could of changed to HALTED by
             // this point.  However, Java does not have compareAndExchange which is the only way
             // to get it exactly correct.

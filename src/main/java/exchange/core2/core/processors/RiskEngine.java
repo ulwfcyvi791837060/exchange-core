@@ -76,8 +76,9 @@ public final class RiskEngine implements WriteBytesMarshallable, StateHash {
             this.fees = new IntLongHashMap();
 
         } else {
-            // TODO change to creator (simpler init)
+            // TODO change to creator 更改为创作者 (simpler init)
             final State state = serializationProcessor.loadData(
+                    //loadStateId == currentTimeMillis ?
                     loadStateId,
                     ISerializationProcessor.SerializedModuleType.RISK_ENGINE,
                     shardId,
@@ -198,6 +199,7 @@ public final class RiskEngine implements WriteBytesMarshallable, StateHash {
         } else if (command == OrderCommandType.PERSIST_STATE_RISK) {
             //持久化 风险状态
             final boolean isSuccess = serializationProcessor.storeData(cmd.orderId, ISerializationProcessor.SerializedModuleType.RISK_ENGINE, shardId, this);
+
             UnsafeUtils.setResultVolatile(cmd, isSuccess, CommandResultCode.SUCCESS, CommandResultCode.STATE_PERSIST_RISK_ENGINE_FAILED);
         }
 

@@ -23,6 +23,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 以前的Customer（消费者），现在叫EventProcessor（事件处理器）和EventHandler（事件句柄）
+ * @Author zenghuikang
+ * @Description
+ * @Date 2019/10/23 19:04
+  * @param null
+ * @return
+ * @throws
+ **/
 @Slf4j
 public final class GroupingProcessor implements EventProcessor {
     private static final int IDLE = 0;
@@ -49,32 +58,47 @@ public final class GroupingProcessor implements EventProcessor {
         this.msgsInGroupLimit = msgsInGroupLimit;
     }
 
+    /**
+     * 获取到{@link序列}参考正被此{@link EventProcessor}。
+     *
+     * @返回参照 {@link序列}此{@link EventProcessor}
+     **/
     @Override
     public Sequence getSequence() {
         return sequence;
     }
 
+    /**
+     * 信号，当它已经完成了在下一一刀两断消费这EventProcessor应该停止。
+     * 它会调用{@link SequenceBarrier＃警报（）}通知线程检查状态。
+     **/
     @Override
     public void halt() {
         running.set(HALTED);
+        //Barrier调用alert方法，在后面消费者消费的时候，会查看该状态，以决定是否阻塞在ringBuffer上等待事件。
+        //通知消费者状态变化。当调用EventProcessor#halt()将调用此方法。
         sequenceBarrier.alert();
     }
 
     @Override
     public boolean isRunning() {
         return running.get() != IDLE;
-    }
+    } //闲
 
 
     /**
-     * 可以在halt（）之后让另一个线程重新运行此方法。
+     * 可以在 停止() halt（）之后让另一个线程重新运行此方法。
      * It is ok to have another thread rerun this method after a halt().
      *
-     * @throws IllegalStateException if this object instance is already running in a thread
+     * @throws IllegalStateException if this object instance is already running in a thread 如果此对象实例已在线程中运行
      */
     @Override
     public void run() {
+        /**
+         如果当前值{@code ==}是期望值，则以原子方式将该值设置为给定的更新值。
+         **/
         if (running.compareAndSet(IDLE, RUNNING)) {
+            //清除当前警报状态
             sequenceBarrier.clearAlert();
             try {
                 if (running.get() == RUNNING) {
@@ -84,11 +108,14 @@ public final class GroupingProcessor implements EventProcessor {
                 running.set(IDLE);
             }
         } else {
+            /**
+             这是一些猜测工作。此时，运行状态可以更改为“已暂停”。但是，Java没有compareAndExchange，这是使其完全正确的唯一方法。
+             **/
             // This is a little bit of guess work.  The running state could of changed to HALTED by
             // this point.  However, Java does not have compareAndExchange which is the only way
             // to get it exactly correct.
             if (running.get() == RUNNING) {
-                throw new IllegalStateException("Thread is already running");
+                throw new IllegalStateException("Thread is already running 线程已经在运行");
             }
         }
     }
@@ -109,6 +136,7 @@ public final class GroupingProcessor implements EventProcessor {
 
                 // 应该旋转并检查另一个障碍
                 // should spin and also check another barrier
+                // 等待旋转助手
                 long availableSequence = waitSpinningHelper.tryWaitFor(nextSequence);
 
                 if (nextSequence <= availableSequence) {

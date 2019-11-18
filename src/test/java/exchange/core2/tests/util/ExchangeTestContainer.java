@@ -102,7 +102,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
                 .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
                 .orderBookFactory(symbolType -> new OrderBookFastImpl(OrderBookFastImpl.DEFAULT_HOT_WIDTH, symbolType))
 //                .orderBookFactory(OrderBookNaiveImpl::new)
-                .loadStateId(stateId) // Loading from persisted state
+                .loadStateId(stateId) // Loading from persisted state 从持久状态加载
                 .build();
 
         //启动disruptor
